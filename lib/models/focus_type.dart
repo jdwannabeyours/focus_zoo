@@ -1,0 +1,1 @@
+enum FocusType { productive, relax }
