@@ -3,6 +3,7 @@ import '../models/focus_type.dart';
 import 'dart:async';
 import '../models/history_data.dart';
 import '../models/plan_history.dart';
+import 'home_screen.dart';
 
 class FocusStatusScreen extends StatefulWidget {
   final String topic;
@@ -24,6 +25,7 @@ class _FocusStatusScreenState extends State<FocusStatusScreen> {
   late int _secondsLeft;
   Timer? _timer;
   bool _isEnded = false;
+  bool _dialogShown = false;
 
   @override
   void initState() {
@@ -33,46 +35,45 @@ class _FocusStatusScreenState extends State<FocusStatusScreen> {
   }
 
   void _startTimer() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_secondsLeft > 0) {
-        setState(() {
-          _secondsLeft--;
-        });
+  _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    if (_secondsLeft > 0) {
+      setState(() {
+        _secondsLeft--;
+      });
+    } else {
+      timer.cancel();
+      if (_isEnded) return; // Prevent double dialog
+      setState(() {
+        _isEnded = true;
+      });
+      if (widget.focusType == FocusType.productive) {
+        _showResultDialog(success: true);
       } else {
-        timer.cancel();
-        if (widget.focusType == FocusType.productive) {
-          // Productive: timer ends, user succeeded
-          _showResultDialog(success: true);
-        } else {
-          // Relax: timer ends, user failed
-          _showResultDialog(success: false);
-        }
+        _showResultDialog(success: false);
       }
-    });
-  }
+    }
+  });
+}
 
   void _endSession() {
-    _timer?.cancel();
-    setState(() {
-      _isEnded = true;
-    });
-    if (widget.focusType == FocusType.productive) {
-      // Productive: user ended early, failed
-      _showResultDialog(success: false);
-    } else {
-      // Relax: user ended before timer, succeeded
-      _showResultDialog(success: true);
-    }
+  if (_isEnded) return; // Prevent multiple triggers
+  _timer?.cancel();
+  setState(() {
+    _isEnded = true;
+  });
+  if (widget.focusType == FocusType.productive) {
+    _showResultDialog(success: false);
+  } else {
+    _showResultDialog(success: true);
   }
+}
 
-  void _showResultDialog({required bool success}) async {
-  int? actualSeconds;
-  if (widget.focusType == FocusType.relax) {
-    actualSeconds = widget.minutes * 60 - _secondsLeft;
-  } else if (widget.focusType == FocusType.productive) {
-    actualSeconds = widget.minutes * 60 - _secondsLeft;
-  }
+void _showResultDialog({required bool success}) async {
+  if (_dialogShown) return;
+  _dialogShown = true;
+  _timer?.cancel();
 
+  int? actualSeconds = widget.minutes * 60 - _secondsLeft;
   await HistoryData.addHistory(
     PlanHistory(
       topic: widget.topic,
@@ -84,10 +85,13 @@ class _FocusStatusScreenState extends State<FocusStatusScreen> {
     ),
   );
 
-  showDialog(
+  if (!mounted) return;
+
+  // Await dialog, then navigate to home using pushAndRemoveUntil
+  await showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (_) => AlertDialog(
+    builder: (dialogContext) => AlertDialog(
       title: Text(success ? "Success!" : "Failed"),
       content: Text(success
           ? (widget.focusType == FocusType.productive
@@ -99,15 +103,22 @@ class _FocusStatusScreenState extends State<FocusStatusScreen> {
       actions: [
         TextButton(
           onPressed: () {
-            Navigator.of(context)
-                .popUntil((route) => route.isFirst); // Go back to home
+            Navigator.of(dialogContext).pop();
           },
-          child: Text("OK"),
+          child: const Text('OK'),
         ),
       ],
     ),
   );
+
+  if (mounted) {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
+      (route) => false,
+    );
+  }
 }
+
 
   @override
   void dispose() {

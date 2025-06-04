@@ -1,6 +1,6 @@
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'plan_history.dart';
+import 'package:hive/hive.dart';
 
 
 class HistoryData {
@@ -9,31 +9,28 @@ class HistoryData {
     return prefs.getString('current_user');
   }
 
-  static Future<String> _getKey() async {
+  static Future<String> _getBoxName() async {
     final user = await getCurrentUser();
     return 'plan_history_${user ?? "guest"}';
   }
 
   static Future<List<PlanHistory>> loadHistory() async {
-    final prefs = await SharedPreferences.getInstance();
-    final key = await _getKey();
-    final jsonString = prefs.getString(key);
-    if (jsonString == null) return [];
-    final List decoded = json.decode(jsonString);
-    return decoded.map((e) => PlanHistory.fromJson(e)).toList();
-  }
-
-  static Future<void> saveHistory(List<PlanHistory> history) async {
-    final prefs = await SharedPreferences.getInstance();
-    final key = await _getKey();
-    final jsonString = json.encode(history.map((e) => e.toJson()).toList());
-    await prefs.setString(key, jsonString);
+    final boxName = await _getBoxName();
+    final box = await Hive.openBox<PlanHistory>(boxName);
+    return box.values.toList();
   }
 
   static Future<void> addHistory(PlanHistory plan) async {
-    final history = await loadHistory();
-    history.add(plan);
-    await saveHistory(history);
+    final boxName = await _getBoxName();
+    final box = await Hive.openBox<PlanHistory>(boxName);
+    await box.add(plan);
+  }
+
+  static Future<void> saveHistory(List<PlanHistory> history) async {
+    final boxName = await _getBoxName();
+    final box = await Hive.openBox<PlanHistory>(boxName);
+    await box.clear();
+    await box.addAll(history);
   }
 }
 

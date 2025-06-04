@@ -1,12 +1,23 @@
 import 'focus_type.dart';
+import 'package:hive/hive.dart';
 
+part 'plan_history.g.dart';
+
+@HiveType(typeId: 0)
 class PlanHistory {
+  @HiveField(0)
   final String topic;
+  @HiveField(1)
   final int minutes;
+  @HiveField(2)
   final FocusType focusType;
+  @HiveField(3)
   final bool success;
+  @HiveField(4)
   final DateTime dateTime;
-  final int? actualMinutes; // Add this field
+  @HiveField(5)
+  final int? actualMinutes;
+  @HiveField(6)
   final int? actualSeconds;
 
   PlanHistory({
@@ -15,27 +26,7 @@ class PlanHistory {
     required this.focusType,
     required this.success,
     required this.dateTime,
-    this.actualMinutes, // Add to constructor
+    this.actualMinutes,
     this.actualSeconds,
   });
-
-  Map<String, dynamic> toJson() => {
-        'topic': topic,
-        'minutes': minutes,
-        'focusType': focusType.index,
-        'success': success,
-        'dateTime': dateTime.toIso8601String(),
-        'actualMinutes': actualMinutes,
-        'actualSeconds': actualSeconds,
-      };
-
-  factory PlanHistory.fromJson(Map<String, dynamic> json) => PlanHistory(
-        topic: json['topic'],
-        minutes: json['minutes'],
-        focusType: FocusType.values[json['focusType']],
-        success: json['success'],
-        dateTime: DateTime.parse(json['dateTime']),
-        actualMinutes: json['actualMinutes'],
-        actualSeconds: json['actualSeconds'],
-      );
 }

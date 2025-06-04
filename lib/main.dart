@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'models/plan_history.dart';
+import 'models/focus_type.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  Hive.registerAdapter(PlanHistoryAdapter());
+  Hive.registerAdapter(FocusTypeAdapter());
   runApp(const FocusZooApp());
 }
 
