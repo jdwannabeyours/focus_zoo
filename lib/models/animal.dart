@@ -1,17 +1,25 @@
-class Animal {
-  final String id;
-  final String type; // e.g. 'pig', 'chicken'
-  final String variant; // e.g. 'big', 'winged'
-  final String mood; // 'happy', 'sad', 'sick', 'excited'
-  final int xp; // XP towards next evolution
-  final bool unlocked;
+import 'package:hive/hive.dart';
 
-  const Animal({
+part 'animal.g.dart';
+
+@HiveType(typeId: 2)
+class Animal {
+  @HiveField(0)
+  final String id;
+  @HiveField(1)
+  final String type; // 'pig'
+  @HiveField(2)
+  final String variant; // e.g. 'basic'
+  @HiveField(3)
+  String mood; // 'happy' or 'sad'
+  @HiveField(4)
+  bool unlocked;
+
+  Animal({
     required this.id,
     required this.type,
     required this.variant,
     required this.mood,
-    this.xp = 0,
-    this.unlocked = false,
+    required this.unlocked,
   });
 }

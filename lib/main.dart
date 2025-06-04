@@ -5,12 +5,15 @@ import 'screens/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models/plan_history.dart';
 import 'models/focus_type.dart';
+import 'models/animal.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
   Hive.registerAdapter(PlanHistoryAdapter());
   Hive.registerAdapter(FocusTypeAdapter());
+  Hive.registerAdapter(AnimalAdapter());
+  await Hive.openBox<Animal>('zooBox');
   runApp(const FocusZooApp());
 }
 

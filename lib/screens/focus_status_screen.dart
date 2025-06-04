@@ -4,6 +4,7 @@ import 'dart:async';
 import '../models/history_data.dart';
 import '../models/plan_history.dart';
 import 'home_screen.dart';
+import '../models/zoo_data.dart';
 
 class FocusStatusScreen extends StatefulWidget {
   final String topic;
@@ -85,9 +86,17 @@ void _showResultDialog({required bool success}) async {
     ),
   );
 
+  // --- Zoo management logic here ---
+  if (success && widget.focusType == FocusType.relax) {
+    await ZooData.updateZooOnRelaxSuccess();
+  }
+  if (!success && widget.focusType == FocusType.productive) {
+    await ZooData.updateZooOnProductiveFail();
+  }
+  // --- End zoo management logic ---
+
   if (!mounted) return;
 
-  // Await dialog, then navigate to home using pushAndRemoveUntil
   await showDialog(
     context: context,
     barrierDismissible: false,
@@ -118,7 +127,6 @@ void _showResultDialog({required bool success}) async {
     );
   }
 }
-
 
   @override
   void dispose() {
